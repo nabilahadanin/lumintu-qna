@@ -3,6 +3,7 @@
 require('database/ChatRooms.php');
 include("crypt.php");
 include("get_nama.php");
+include("database/connection.php");
 
 $chat_object = new ChatRooms;
 
@@ -17,7 +18,10 @@ $ticket_id = explode("=",$arrayHasil[1]);
 $sesi_id = explode("=",$arrayHasil[2]);
 
 $nama_peserta = get_nama($peserta_id[1]);
-
+$sql = "SELECT port FROM chatrooms WHERE id_session=".$sesi_id[1];
+$result = $conn->query($sql);
+$row = $result->fetch_assoc();
+$portnya = $row["port"];
 ?> 
 
 <!doctype html>
@@ -143,8 +147,9 @@ $nama_peserta = get_nama($peserta_id[1]);
                               echo "
                             <input type='hidden' name='login_user_id' id='login_user_id' value='".$peserta_id[1]."'/>
                             <input type='hidden' name='login_id_sesi' id='login_id_sesi' value='".$sesi_id[1]."'/>
-                            <input type='hidden' name='login_id_ticket' id='login_id_ticket' value='".$ticket_id[1]."'/>"
-                            ?>
+                            <input type='hidden' name='login_id_ticket' id='login_id_ticket' value='".$ticket_id[1]."'/>
+                            <input type='hidden' name='port_id' id='port_id' value='".$portnya."'/>"
+			    ?>
                         </div>
 
                     </div>
@@ -202,8 +207,8 @@ $nama_peserta = get_nama($peserta_id[1]);
 
         // Koneksi Websocket
         $(document).ready(function(){
-
-            var conn = new WebSocket('ws://localhost:8081');
+	    var portid = $('#port_id').val();
+            var conn = new WebSocket('ws://20.127.6.96:'+portid);
             conn.onopen = function(e) {
                 console.log("Connection established!");
             };
@@ -277,7 +282,7 @@ $nama_peserta = get_nama($peserta_id[1]);
         var id_tiket = $('#login_id_ticket').val();
         var id_tiket_session = $('#login_id_sesi').val();
         $.ajax({  
-            url: 'http://192.168.18.76:8001/items/ticket?fields=ticket_id,ticket_type,ticket_x_session.session_id.*,ticket_x_day.day_id.*',  
+            url: 'https://api-ticket.arisukarno.xyz/items/ticket?fields=ticket_id,ticket_type,ticket_x_session.session_id.*,ticket_x_day.day_id.*',  
             type: 'GET',  
             dataType: 'json',  
             success: function(data, textStatus, xhr) { //callback - pengganti promise

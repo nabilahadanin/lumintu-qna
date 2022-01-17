@@ -2,7 +2,7 @@
 	$servername = "localhost";
 	$database = "lumintu_qna"; 
 	$username = "root";
-	$password = "";
+	$password = "Adminqna1234";
 
 	// Create connection
 	$conn = mysqli_connect($servername, $username, $password, $database);

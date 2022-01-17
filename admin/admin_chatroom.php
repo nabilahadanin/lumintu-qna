@@ -1,13 +1,19 @@
 <?php
 session_start();
 
-require('../database/ChatRooms.php');
-include('../get_nama.php');
+require(dirname(__FILE__). "/../database/ChatRooms.php");
+include(dirname(__FILE__). "/../get_nama.php");
+include(dirname(__FILE__). "/../database/connection.php");
 
 if (!isset($_SESSION['is_login'])) {
-    echo "<script>document.location.href='index.php';</script>";
-    die();
+   echo "<script>document.location.href='index.php';</script>";
+   die();
 }
+$sql = "SELECT port FROM chatrooms WHERE id_session=".$_GET["id_session"];
+$result = $conn->query($sql);
+$row = $result->fetch_assoc();
+$portnya = $row["port"];
+echo exec("php ../bin/server.php $portnya > /dev/null 2>&1 &");
 
 $chat_object = new ChatRooms;
 
@@ -218,7 +224,8 @@ $chat_data = $chat_object->get_all_chat_data();
           </div>
           <?php 
           echo "
-          <input type='hidden' name='login_id_sesi' id='login_id_sesi' value='".$_GET["id_session"]."'/>";
+          <input type='hidden' name='login_id_sesi' id='login_id_sesi' value='".$_GET["id_session"]."'/>;
+	  <input type='hidden' name='port_id_client' id='port_id_client' value='".$portnya."'/>";
           ?>
             </div>
           </div>
@@ -234,8 +241,8 @@ $chat_data = $chat_object->get_all_chat_data();
         } 
         // Koneksi Websocket
         $(document).ready(function(){
-
-            var conn = new WebSocket('ws://localhost:8081');
+	    var port_id = $('#port_id_client').val();
+            var conn = new WebSocket('ws://20.127.6.96:'+port_id);
             conn.onopen = function(e) {
                 console.log("Connection established!");
             };
@@ -244,26 +251,29 @@ $chat_data = $chat_object->get_all_chat_data();
                 console.log(e.data);
 
                 var sesi_id1 = $('#login_id_sesi').val();
+		//var port_id = $('#port_id_client').val()
+		console.log(port_id)
 
                 var data1 = JSON.parse(e.data);
 
                 $.ajax({  
-                    url: 'http://192.168.18.76:8001/items/customer?fields=customer_id,customer_name&filter[customer_id]='+data1.userId,  
+                    url: 'https://api-ticket.arisukarno.xyz/items/customer?fields=customer_id,customer_name&filter[customer_id]='+data1.userId,  
                     type: 'GET',  
                     //Authorization Header
-                    beforeSend: function (xhr) {
-                        xhr.setRequestHeader('Authorization', 'Bearer tokencoba');
-                    },
+                   // beforeSend: function (xhr) {
+                     //   xhr.setRequestHeader('Authorization', 'Bearer tokencoba');
+                    //},
                     dataType: 'json',  
                     success: function(data, textStatus, xhr) { 
                       var list_data = ''
 
                       var nama = data.data[0].customer_name 
-
-                      if( data1.sesiId == sesi_id1 )
-                      {
-                          list_data = '<div class="accordion-item rounded-top" id="accordion-item-'+data1.mId+'"><h3 class="accordion-header" id="heading-'+data1.mId+'"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-'+data1.mId+'a'+'"" aria-expanded="false" aria-controls="flush-'+data1.mId+'a'+'""><div class="align-items-center " style="width: 90%!important;"><span class="fw-bold mb-2">'+nama+'</span><div class="small text-truncate mt-2">'+escapeHtml(data1.msg)+'</div></div></button></h3><div id="flush-'+data1.mId+'a'+'" class="accordion-collapse collapse" aria-labelledby="heading-'+data1.mId+'a'+'"" data-bs-parent="#accordionFlush"><div class="accordion-body"><p>'+data1.msg+'</p><div class="d-grid gap-2"><button type="button" class="btn btn-outline-primary btn-choose">Pilih</button></div></div></div></div>'
-                      }
+		      //console.log('masuk sini?');
+		      //var nama = "Arafat Maku";
+                      //if( data1.sesiId == sesi_id1 )
+                      //{
+                         list_data += '<div class="accordion-item rounded-top" id="accordion-item-'+data1.mId+'"><h3 class="accordion-header" id="heading-'+data1.mId+'"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-'+data1.mId+'a'+'"" aria-expanded="false" aria-controls="flush-'+data1.mId+'a'+'""><div class="align-items-center " style="width: 90%!important;"><span class="fw-bold mb-2">'+nama+'</span><div class="small text-truncate mt-2">'+escapeHtml(data1.msg)+'</div></div></button></h3><div id="flush-'+data1.mId+'a'+'" class="accordion-collapse collapse" aria-labelledby="heading-'+data1.mId+'a'+'"" data-bs-parent="#accordionFlush"><div class="accordion-body"><p>'+data1.msg+'</p><div class="d-grid gap-2"><button type="button" class="btn btn-outline-primary btn-choose">Pilih</button></div></div></div></div>'
+                      //}
 
                       $('#accordionFlushExample').append(list_data);
                     }
@@ -279,7 +289,7 @@ $chat_data = $chat_object->get_all_chat_data();
       var id_tiket = 1;
       var id_tiket_session = 1;
         $.ajax({  
-            url: 'http://192.168.18.76:8001/items/ticket?fields=ticket_id,ticket_type,ticket_x_session.session_id.*,ticket_x_day.day_id.*',  
+            url: 'https://api-ticket.arisukarno.xyz/items/ticket?fields=ticket_id,ticket_type,ticket_x_session.session_id.*,ticket_x_day.day_id.*',  
             type: 'GET',  
             dataType: 'json',  
             success: function(data, textStatus, xhr) { 

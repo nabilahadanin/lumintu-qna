@@ -71,7 +71,7 @@ if (!isset($_SESSION['is_login'])) {
         var id_tiket = 1;
         var id_tiket_session = 1;
         $.ajax({  
-            url: 'http://192.168.18.76:8001/items/ticket?fields=ticket_id,ticket_type,ticket_x_session.session_id.*&filter[ticket_id]=4',  
+            url: 'https://api-ticket.arisukarno.xyz/items/ticket?fields=ticket_id,ticket_type,ticket_x_session.session_id.*&filter[ticket_id]=4',  
             type: 'GET',  
             dataType: 'json',  
             success: function(data, textStatus, xhr) { 
@@ -94,7 +94,7 @@ if (!isset($_SESSION['is_login'])) {
                         let eventbenar = new Date(time_start - jam)
                         // jika waktu mulai masih blm lewat : beda sejam 
                         // 25/10/2021 16:11 <= 01/12/2021 09:00
-                        if( new Date('2021-12-01T09:00:00') >= eventbenar ){
+                        if( new Date('2021-12-01T16:00:00') >= eventbenar ){
                             button_chat += "Segera dalam 1 Jam"
                         } else { // 
                             
